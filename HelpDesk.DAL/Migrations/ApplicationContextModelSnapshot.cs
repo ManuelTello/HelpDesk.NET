@@ -22,7 +22,7 @@ namespace HelpDesk.DAL.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("HelpDesk.DAL.Models.HistoryItem", b =>
+            modelBuilder.Entity("HelpDesk.DAL.Models.HistoryEntry", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -30,7 +30,7 @@ namespace HelpDesk.DAL.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("DateTimeCreated")
+                    b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("State")
@@ -39,16 +39,37 @@ namespace HelpDesk.DAL.Migrations
                     b.Property<Guid>("TicketId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
 
                     b.HasIndex("TicketId");
 
-                    b.HasIndex("UserId");
-
                     b.ToTable("HistorySummary");
+                });
+
+            modelBuilder.Entity("HelpDesk.DAL.Models.OwnershipEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("AgentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("TicketId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AgentId");
+
+                    b.HasIndex("TicketId");
+
+                    b.ToTable("OwnershipSummary");
                 });
 
             modelBuilder.Entity("HelpDesk.DAL.Models.Ticket", b =>
@@ -57,13 +78,16 @@ namespace HelpDesk.DAL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("Category")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("DateTimeClosed")
+                    b.Property<DateTime?>("DateClosed")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("DateTimeCreated")
+                    b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
@@ -79,7 +103,39 @@ namespace HelpDesk.DAL.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ActorId");
+
                     b.ToTable("Tickets");
+                });
+
+            modelBuilder.Entity("HelpDesk.DAL.Models.Token", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateExpiration")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateRevoked")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("TokenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Auditory");
                 });
 
             modelBuilder.Entity("HelpDesk.DAL.Models.User", b =>
@@ -108,7 +164,7 @@ namespace HelpDesk.DAL.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("HelpDesk.DAL.Models.HistoryItem", b =>
+            modelBuilder.Entity("HelpDesk.DAL.Models.HistoryEntry", b =>
                 {
                     b.HasOne("HelpDesk.DAL.Models.Ticket", "Ticket")
                         .WithMany("HistorySummary")
@@ -116,13 +172,46 @@ namespace HelpDesk.DAL.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("HelpDesk.DAL.Models.User", "User")
+                    b.Navigation("Ticket");
+                });
+
+            modelBuilder.Entity("HelpDesk.DAL.Models.OwnershipEntry", b =>
+                {
+                    b.HasOne("HelpDesk.DAL.Models.User", "Agent")
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("AgentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("HelpDesk.DAL.Models.Ticket", "Ticket")
+                        .WithMany("OwnershipSummary")
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Agent");
+
                     b.Navigation("Ticket");
+                });
+
+            modelBuilder.Entity("HelpDesk.DAL.Models.Ticket", b =>
+                {
+                    b.HasOne("HelpDesk.DAL.Models.User", "Actor")
+                        .WithMany()
+                        .HasForeignKey("ActorId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Actor");
+                });
+
+            modelBuilder.Entity("HelpDesk.DAL.Models.Token", b =>
+                {
+                    b.HasOne("HelpDesk.DAL.Models.User", "User")
+                        .WithMany("Tokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
@@ -130,6 +219,13 @@ namespace HelpDesk.DAL.Migrations
             modelBuilder.Entity("HelpDesk.DAL.Models.Ticket", b =>
                 {
                     b.Navigation("HistorySummary");
+
+                    b.Navigation("OwnershipSummary");
+                });
+
+            modelBuilder.Entity("HelpDesk.DAL.Models.User", b =>
+                {
+                    b.Navigation("Tokens");
                 });
 #pragma warning restore 612, 618
         }
