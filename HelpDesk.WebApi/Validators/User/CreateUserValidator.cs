@@ -21,9 +21,9 @@ public class CreateUserValidator : AbstractValidator<CreateUserContract>
             .NotEmpty()
             .NotNull()
             .Matches("^[a-zA-Z ]+$").WithMessage("Invalid full name");
-        RuleFor(x => x.Role)
+        RuleFor(x => x.Role).Cascade(CascadeMode.Stop)
             .NotEmpty()
             .NotNull()
-            .Must(e => Enum.TryParse<UserRole>(e, out _)).WithMessage("Invalid role");
+            .Must(role => Enum.TryParse<UserRole>(role, out _)).WithMessage("Invalid role");
     }
 }
